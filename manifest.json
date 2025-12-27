@@ -1,6 +1,6 @@
 {
-  "name": "Shot List",
-  "short_name": "ShotList",
+  "name": "CineSlate",
+  "short_name": "CineSlate",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#09090b",
