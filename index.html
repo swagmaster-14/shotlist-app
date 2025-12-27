@@ -76,52 +76,74 @@
     <div id="shots"></div>
   </div>
 
-  <script>
-    let shots = JSON.parse(localStorage.getItem("shots")) || [];
+<script>
+  let shots = JSON.parse(localStorage.getItem("shots")) || [];
 
-    function save() {
-      localStorage.setItem("shots", JSON.stringify(shots));
-      render();
-    }
+  const shotInput = document.getElementById("shot");
+  const typeInput = document.getElementById("type");
+  const actorsInput = document.getElementById("actors");
+  const locationInput = document.getElementById("location");
+  const notesInput = document.getElementById("notes");
+  const shotsDiv = document.getElementById("shots");
 
-    function addShot() {
-      const shot = {
-        id: Date.now(),
-        shot: shot.value,
-        type: type.value,
-        actors: actors.value,
-        location: location.value,
-        notes: notes.value,
-        status: "Planned"
-      };
-      shots.push(shot);
-      save();
-      shot.value = type.value = actors.value = location.value = notes.value = "";
-    }
+  function save() {
+    localStorage.setItem("shots", JSON.stringify(shots));
+    render();
+  }
 
-    function toggle(id) {
-      shots = shots.map(s =>
-        s.id === id ? { ...s, status: s.status === "Planned" ? "Shot" : "Planned" } : s
-      );
-      save();
-    }
+  function addShot() {
+    if (!shotInput.value || !typeInput.value) return;
 
-    function render() {
-      shotsDiv.innerHTML = "";
-      shots.forEach(s => {
-        shotsDiv.innerHTML += `
-          <div class="shot">
-            <strong>${s.shot}</strong><br>
-            Type: ${s.type}<br>
-            Actors: ${s.actors}<br>
-            Location: ${s.location}<br>
-            <small>${s.notes}</small><br>
-            <div class="status ${s.status === "Shot" ? "shotdone" : "planned"}"
-                 onclick="toggle(${s.id})">${s.status}</div>
+    const newShot = {
+      id: Date.now(),
+      shot: shotInput.value,
+      type: typeInput.value,
+      actors: actorsInput.value,
+      location: locationInput.value,
+      notes: notesInput.value,
+      status: "Planned"
+    };
+
+    shots.push(newShot);
+    save();
+
+    shotInput.value = "";
+    typeInput.value = "";
+    actorsInput.value = "";
+    locationInput.value = "";
+    notesInput.value = "";
+  }
+
+  function toggle(id) {
+    shots = shots.map(s =>
+      s.id === id
+        ? { ...s, status: s.status === "Planned" ? "Shot" : "Planned" }
+        : s
+    );
+    save();
+  }
+
+  function render() {
+    shotsDiv.innerHTML = "";
+    shots.forEach(s => {
+      shotsDiv.innerHTML += `
+        <div class="shot">
+          <strong>${s.shot}</strong><br>
+          Type: ${s.type}<br>
+          Actors: ${s.actors || "-"}<br>
+          Location: ${s.location || "-"}<br>
+          <small>${s.notes || ""}</small><br>
+          <div class="status ${s.status === "Shot" ? "shotdone" : "planned"}"
+               onclick="toggle(${s.id})">
+            ${s.status}
           </div>
-        `;
-      });
-    }
+        </div>
+      `;
+    });
+  }
+
+  render();
+</script>
 
     const shot = document.getElementById("shot");
     const type = document.getElementById("type");
