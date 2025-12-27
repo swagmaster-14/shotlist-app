@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shot List</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="theme-color" content="#09090b">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #09090b;
+      color: #fafafa;
+    }
+    .container {
+      max-width: 420px;
+      margin: auto;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #27272a;
+      color: white;
+    }
+    button {
+      background: white;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .shot {
+      background: #18181b;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 6px;
+      cursor: pointer;
+    }
+    .planned { background: #3f3f46; }
+    .shotdone { background: #16a34a; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🎬 Shot List</h1>
+
+    <input id="shot" placeholder="What is being filmed">
+    <input id="type" placeholder="Shot type (CU, Wide…)">
+    <input id="actors" placeholder="Actors needed">
+    <input id="location" placeholder="Location">
+    <textarea id="notes" placeholder="Notes / props / movement"></textarea>
+
+    <button onclick="addShot()">Add Shot</button>
+
+    <div id="shots"></div>
+  </div>
+
+  <script>
+    let shots = JSON.parse(localStorage.getItem("shots")) || [];
+
+    function save() {
+      localStorage.setItem("shots", JSON.stringify(shots));
+      render();
+    }
+
+    function addShot() {
+      const shot = {
+        id: Date.now(),
+        shot: shot.value,
+        type: type.value,
+        actors: actors.value,
+        location: location.value,
+        notes: notes.value,
+        status: "Planned"
+      };
+      shots.push(shot);
+      save();
+      shot.value = type.value = actors.value = location.value = notes.value = "";
+    }
+
+    function toggle(id) {
+      shots = shots.map(s =>
+        s.id === id ? { ...s, status: s.status === "Planned" ? "Shot" : "Planned" } : s
+      );
+      save();
+    }
+
+    function render() {
+      shotsDiv.innerHTML = "";
+      shots.forEach(s => {
+        shotsDiv.innerHTML += `
+          <div class="shot">
+            <strong>${s.shot}</strong><br>
+            Type: ${s.type}<br>
+            Actors: ${s.actors}<br>
+            Location: ${s.location}<br>
+            <small>${s.notes}</small><br>
+            <div class="status ${s.status === "Shot" ? "shotdone" : "planned"}"
+                 onclick="toggle(${s.id})">${s.status}</div>
+          </div>
+        `;
+      });
+    }
+
+    const shot = document.getElementById("shot");
+    const type = document.getElementById("type");
+    const actors = document.getElementById("actors");
+    const
