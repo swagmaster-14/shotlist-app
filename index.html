@@ -77,7 +77,10 @@
   </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+
   let shots = JSON.parse(localStorage.getItem("shots")) || [];
+  let editingId = null;
 
   const shotInput = document.getElementById("shot");
   const typeInput = document.getElementById("type");
@@ -85,6 +88,7 @@
   const locationInput = document.getElementById("location");
   const notesInput = document.getElementById("notes");
   const shotsDiv = document.getElementById("shots");
+  const addButton = document.querySelector("button");
 
   function save() {
     localStorage.setItem("shots", JSON.stringify(shots));
@@ -92,21 +96,40 @@
   }
 
   function addShot() {
-    if (!shotInput.value || !typeInput.value) return;
+    if (!shotInput.value.trim() || !typeInput.value.trim()) return;
 
-    const newShot = {
-      id: Date.now(),
-      shot: shotInput.value,
-      type: typeInput.value,
-      actors: actorsInput.value,
-      location: locationInput.value,
-      notes: notesInput.value,
-      status: "Planned"
-    };
+    if (editingId) {
+      shots = shots.map(s =>
+        s.id === editingId
+          ? {
+              ...s,
+              shot: shotInput.value,
+              type: typeInput.value,
+              actors: actorsInput.value,
+              location: locationInput.value,
+              notes: notesInput.value
+            }
+          : s
+      );
+      editingId = null;
+      addButton.textContent = "Add Shot";
+    } else {
+      shots.push({
+        id: Date.now(),
+        shot: shotInput.value,
+        type: typeInput.value,
+        actors: actorsInput.value,
+        location: locationInput.value,
+        notes: notesInput.value,
+        status: "Planned"
+      });
+    }
 
-    shots.push(newShot);
+    clearInputs();
     save();
+  }
 
+  function clearInputs() {
     shotInput.value = "";
     typeInput.value = "";
     actorsInput.value = "";
@@ -114,7 +137,37 @@
     notesInput.value = "";
   }
 
-  function toggle(id) {
+  function editShot(id) {
+    const s = shots.find(s => s.id === id);
+    if (!s) return;
+
+    shotInput.value = s.shot;
+    typeInput.value = s.type;
+    actorsInput.value = s.actors;
+    locationInput.value = s.location;
+    notesInput.value = s.notes;
+
+    editingId = id;
+    addButton.textContent = "Save Changes";
+  }
+
+  function deleteShot(id) {
+    shots = shots.filter(s => s.id !== id);
+    save();
+  }
+
+  function duplicateShot(id) {
+    const s = shots.find(s => s.id === id);
+    if (!s) return;
+
+    shots.push({
+      ...s,
+      id: Date.now()
+    });
+    save();
+  }
+
+  function toggleStatus(id) {
     shots = shots.map(s =>
       s.id === id
         ? { ...s, status: s.status === "Planned" ? "Shot" : "Planned" }
@@ -123,29 +176,63 @@
     save();
   }
 
+  function moveShot(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= shots.length) return;
+
+    [shots[index], shots[newIndex]] = [shots[newIndex], shots[index]];
+    save();
+  }
+
   function render() {
     shotsDiv.innerHTML = "";
-    shots.forEach(s => {
+
+    shots.forEach((s, index) => {
       shotsDiv.innerHTML += `
         <div class="shot">
-          <strong>${s.shot}</strong><br>
+          <strong>${index + 1}. ${s.shot}</strong><br>
           Type: ${s.type}<br>
           Actors: ${s.actors || "-"}<br>
           Location: ${s.location || "-"}<br>
           <small>${s.notes || ""}</small><br>
+
           <div class="status ${s.status === "Shot" ? "shotdone" : "planned"}"
-               onclick="toggle(${s.id})">
+               data-id="${s.id}">
             ${s.status}
+          </div>
+
+          <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <button data-edit="${s.id}">✏️ Edit</button>
+            <button data-dup="${s.id}">📄 Duplicate</button>
+            <button data-del="${s.id}">🗑 Delete</button>
+            <button data-up="${index}">⬆️</button>
+            <button data-down="${index}">⬇️</button>
           </div>
         </div>
       `;
     });
+
+    document.querySelectorAll("[data-edit]").forEach(b =>
+      b.onclick = () => editShot(Number(b.dataset.edit))
+    );
+    document.querySelectorAll("[data-del]").forEach(b =>
+      b.onclick = () => deleteShot(Number(b.dataset.del))
+    );
+    document.querySelectorAll("[data-dup]").forEach(b =>
+      b.onclick = () => duplicateShot(Number(b.dataset.dup))
+    );
+    document.querySelectorAll("[data-up]").forEach(b =>
+      b.onclick = () => moveShot(Number(b.dataset.up), -1)
+    );
+    document.querySelectorAll("[data-down]").forEach(b =>
+      b.onclick = () => moveShot(Number(b.dataset.down), 1)
+    );
+    document.querySelectorAll(".status").forEach(el =>
+      el.onclick = () => toggleStatus(Number(el.dataset.id))
+    );
   }
 
+  addButton.onclick = addShot;
   render();
+});
 </script>
-
-    const shot = document.getElementById("shot");
-    const type = document.getElementById("type");
-    const actors = document.getElementById("actors");
-    const
