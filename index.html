@@ -1,301 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CineSlate</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineSlate</title>
 
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="theme-color" content="#09090b">
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #09090b;
+  color: #fafafa;
+}
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 16px;
+}
+h1 { font-size: 24px; }
+h2 { font-size: 16px; margin-top: 16px; }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #09090b;
-      color: #fafafa;
-    }
-    .container {
-      max-width: 420px;
-      margin: auto;
-      padding: 16px;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 12px;
-    }
-    input, textarea, select {
-      width: 100%;
-      margin-bottom: 8px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      background: #27272a;
-      color: white;
-    }
-    button {
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: none;
-      background: #3f3f46;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button.primary {
-      width: 100%;
-      background: white;
-      color: black;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-    button.icon {
-      background: #27272a;
-      font-size: 16px;
-      position: relative;
-    }
-    button.icon:hover::after {
-      content: attr(data-label);
-      position: absolute;
-      background: #18181b;
-      color: white;
-      padding: 4px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      top: -28px;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-    }
-    .shot {
-      background: #18181b;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    .actions {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .status {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      display: inline-block;
-      margin-top: 6px;
-      cursor: pointer;
-    }
-    .planned { background: #3f3f46; }
-    .shotdone { background: #16a34a; }
-    .divider {
-      margin: 14px 0;
-      border-top: 1px solid #27272a;
-    }
-  </style>
+input, textarea, select {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #27272a;
+  color: white;
+}
+button {
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: #3f3f46;
+  color: white;
+  cursor: pointer;
+}
+button.primary {
+  width: 100%;
+  background: white;
+  color: black;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+button.icon {
+  background: #27272a;
+  font-size: 16px;
+}
+.shot {
+  background: #18181b;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 6px;
+  cursor: pointer;
+}
+.planned { background: #3f3f46; }
+.shotdone { background: #16a34a; }
+.draggable { cursor: grab; }
+.divider {
+  border-top: 1px solid #27272a;
+  margin: 14px 0;
+}
+</style>
 </head>
+
 <body>
 <div class="container">
-  <h1>CineSlate</h1>
+<h1>CineSlate</h1>
 
-  <select id="project"></select>
-  <input id="newProject" placeholder="Film Name">
-  <button class="primary" id="addProject">Add / Switch Film</button>
+<select id="project"></select>
+<input id="newProject" placeholder="New Film Name">
+<button class="primary" id="addProject">Add / Switch Film</button>
+<button class="primary" id="deleteProject">Delete Current Film</button>
 
-  <div class="divider"></div>
+<div class="divider"></div>
 
-  <input id="shot" placeholder="Scene">
-  <input id="type" placeholder="Shot Type(s)">
-  <input id="actors" placeholder="Actors">
-  <input id="location" placeholder="Location">
-  <textarea id="notes" placeholder="Additional Notes"></textarea>
+<h2>Shot</h2>
+<input id="shot" placeholder="Scene / Shot description">
 
-  <button class="primary" id="addShot">Add Shot</button>
+<select id="type"></select>
+<input id="newType" placeholder="Add shot type">
+<button id="addType">Add Shot Type</button>
 
-  <div class="divider"></div>
+<select id="actors"></select>
+<input id="newActor" placeholder="Add actor">
+<button id="addActor">Add Actor</button>
 
-  <button class="primary" id="exportProject">Export Project Key</button>
-  <textarea id="importData" placeholder="Paste Project Key here"></textarea>
-  <button class="primary" id="importProject">Import Project Key</button>
+<select id="location"></select>
+<input id="newLocation" placeholder="Add location">
+<button id="addLocation">Add Location</button>
 
-  <div id="shots"></div>
+<textarea id="notes" placeholder="Notes"></textarea>
+<button class="primary" id="addShot">Add Shot</button>
+
+<div class="divider"></div>
+
+<h2>Crew</h2>
+<select id="crew"></select>
+<input id="newCrew" placeholder="Add crew member">
+<button id="addCrew">Add Crew Member</button>
+
+<div class="divider"></div>
+
+<button class="primary" id="exportProject">Export Project Key</button>
+<textarea id="importData" placeholder="Paste Project Key"></textarea>
+<button class="primary" id="importProject">Import Project Key</button>
+
+<div id="shots"></div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  let data = JSON.parse(localStorage.getItem("shotlist-data")) || { projects: {}, current: null };
+let data = JSON.parse(localStorage.getItem("cineslate")) || {
+  projects:{}, current:null,
+  types:[], actors:[], locations:[], crew:[]
+};
 
-  const projectSelect = document.getElementById("project");
-  const newProjectInput = document.getElementById("newProject");
-  const addProjectBtn = document.getElementById("addProject");
+const qs = id => document.getElementById(id);
+const projectSel = qs("project");
 
-  const shotInput = document.getElementById("shot");
-  const typeInput = document.getElementById("type");
-  const actorsInput = document.getElementById("actors");
-  const locationInput = document.getElementById("location");
-  const notesInput = document.getElementById("notes");
-  const shotsDiv = document.getElementById("shots");
-  const addShotBtn = document.getElementById("addShot");
+function save(){ localStorage.setItem("cineslate", JSON.stringify(data)); render(); }
+function ensureProject(){
+  if(!data.current) return [];
+  if(!data.projects[data.current]) data.projects[data.current]=[];
+  return data.projects[data.current];
+}
 
-  const exportBtn = document.getElementById("exportProject");
-  const importBtn = document.getElementById("importProject");
-  const importData = document.getElementById("importData");
+function refreshDropdown(id, arr){
+  const el = qs(id);
+  el.innerHTML = arr.map(v=>`<option>${v}</option>`).join("");
+}
 
-  let editingId = null;
+qs("addProject").onclick = ()=>{
+  const name = qs("newProject").value || projectSel.value;
+  if(!name) return;
+  if(!data.projects[name]) data.projects[name]=[];
+  data.current=name;
+  qs("newProject").value="";
+  save();
+};
 
-  function save() {
-    localStorage.setItem("shotlist-data", JSON.stringify(data));
-    render();
-  }
-
-  function ensureProject() {
-    if (!data.current) return [];
-    if (!data.projects[data.current]) data.projects[data.current] = [];
-    return data.projects[data.current];
-  }
-
-  function addProject() {
-    const name = newProjectInput.value.trim() || projectSelect.value;
-    if (!name) return;
-    if (!data.projects[name]) data.projects[name] = [];
-    data.current = name;
-    newProjectInput.value = "";
+qs("deleteProject").onclick = ()=>{
+  if(!data.current) return;
+  if(confirm("Delete this entire film?")){
+    delete data.projects[data.current];
+    data.current=null;
     save();
   }
+};
 
-  function addShot() {
-    if (!shotInput.value || !typeInput.value) return;
-    const shots = ensureProject();
-
-    if (editingId) {
-      const s = shots.find(s => s.id === editingId);
-      Object.assign(s, {
-        shot: shotInput.value,
-        type: typeInput.value,
-        actors: actorsInput.value,
-        location: locationInput.value,
-        notes: notesInput.value
-      });
-      editingId = null;
-      addShotBtn.textContent = "Add Shot";
-    } else {
-      shots.push({
-        id: Date.now(),
-        shot: shotInput.value,
-        type: typeInput.value,
-        actors: actorsInput.value,
-        location: locationInput.value,
-        notes: notesInput.value,
-        status: "Planned"
-      });
+["type","actor","location","crew"].forEach(key=>{
+  qs("add"+key.charAt(0).toUpperCase()+key.slice(1)).onclick = ()=>{
+    const val = qs("new"+key.charAt(0).toUpperCase()+key.slice(1)).value.trim();
+    if(val && !data[key+"s"]?.includes(val)){
+      data[key+"s"] ? data[key+"s"].push(val) : data[key].push(val);
+      qs("new"+key.charAt(0).toUpperCase()+key.slice(1)).value="";
+      save();
     }
+  };
+});
 
-    shotInput.value = typeInput.value = actorsInput.value = locationInput.value = notesInput.value = "";
-    save();
+let editingId=null;
+
+qs("addShot").onclick=()=>{
+  if(!qs("shot").value) return;
+  const shots = ensureProject();
+
+  if(editingId){
+    Object.assign(shots.find(s=>s.id===editingId),{
+      shot:qs("shot").value,
+      type:qs("type").value,
+      actors:qs("actors").value,
+      location:qs("location").value,
+      notes:qs("notes").value
+    });
+    editingId=null;
+    qs("addShot").textContent="Add Shot";
+  } else {
+    shots.push({
+      id:Date.now(),
+      shot:qs("shot").value,
+      type:qs("type").value,
+      actors:qs("actors").value,
+      location:qs("location").value,
+      notes:qs("notes").value,
+      status:"Planned"
+    });
   }
 
-  exportBtn.onclick = () => {
-    if (!data.current) return;
-    const payload = {
-      name: data.current,
-      shots: data.projects[data.current]
+  ["shot","notes"].forEach(i=>qs(i).value="");
+  save();
+};
+
+qs("exportProject").onclick=()=>{
+  navigator.clipboard.writeText(JSON.stringify({
+    name:data.current,
+    shots:ensureProject()
+  }));
+  alert("Copied project key");
+};
+
+qs("importProject").onclick=()=>{
+  try{
+    const p=JSON.parse(qs("importData").value);
+    data.projects[p.name]=p.shots;
+    data.current=p.name;
+    qs("importData").value="";
+    save();
+  }catch{ alert("Invalid key"); }
+};
+
+function render(){
+  projectSel.innerHTML = Object.keys(data.projects).map(p=>`<option ${p===data.current?"selected":""}>${p}</option>`).join("");
+  refreshDropdown("type",data.types);
+  refreshDropdown("actors",data.actors);
+  refreshDropdown("location",data.locations);
+  refreshDropdown("crew",data.crew);
+
+  const shotsDiv=qs("shots");
+  shotsDiv.innerHTML="";
+
+  ensureProject().forEach((s,i)=>{
+    const d=document.createElement("div");
+    d.className="shot draggable";
+    d.draggable=true;
+    d.innerHTML=`
+      <strong>${i+1}. ${s.shot}</strong><br>
+      ${s.type} | ${s.actors} | ${s.location}<br>
+      <small>${s.notes}</small><br>
+      <div class="status ${s.status==="Shot"?"shotdone":"planned"}">${s.status}</div>
+      <div class="actions">
+        <button class="icon">✏️</button>
+        <button class="icon">🗑</button>
+      </div>
+    `;
+
+    d.ondragstart=e=>e.dataTransfer.setData("i",i);
+    d.ondragover=e=>e.preventDefault();
+    d.ondrop=e=>{
+      const from=e.dataTransfer.getData("i");
+      const shots=ensureProject();
+      shots.splice(i,0,shots.splice(from,1)[0]);
+      save();
     };
-    navigator.clipboard.writeText(JSON.stringify(payload));
-    alert("Project key copied to clipboard");
-  };
 
-  importBtn.onclick = () => {
-    try {
-      const payload = JSON.parse(importData.value);
-      if (!payload.name || !Array.isArray(payload.shots)) throw "Invalid";
-      data.projects[payload.name] = payload.shots;
-      data.current = payload.name;
-      importData.value = "";
+    d.querySelector(".status").onclick=()=>{
+      s.status=s.status==="Planned"?"Shot":"Planned";
       save();
-    } catch {
-      alert("Invalid project key");
-    }
-  };
-
-  function render() {
-    projectSelect.innerHTML = Object.keys(data.projects)
-      .map(p => `<option ${p === data.current ? "selected" : ""}>${p}</option>`)
-      .join("");
-
-    const shots = ensureProject();
-    shotsDiv.innerHTML = "";
-
-    shots.forEach((s, i) => {
-      shotsDiv.innerHTML += `
-        <div class="shot">
-          <strong>${i + 1}. ${s.shot}</strong><br>
-          Type: ${s.type}<br>
-          Actors: ${s.actors || "-"}<br>
-          Location: ${s.location || "-"}<br>
-          <small>${s.notes || ""}</small><br>
-          <div class="status ${s.status === "Shot" ? "shotdone" : "planned"}">${s.status}</div>
-          <div class="actions">
-            <button class="icon" data-edit="${s.id}" data-label="Edit">✏️</button>
-            <button class="icon" data-dup="${s.id}" data-label="Duplicate">📄</button>
-            <button class="icon" data-del="${s.id}" data-label="Delete">🗑</button>
-            <button class="icon" data-up="${i}" data-label="Move up">⬆️</button>
-            <button class="icon" data-down="${i}" data-label="Move down">⬇️</button>
-          </div>
-        </div>`;
-    });
-
-    document.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => {
-      const s = ensureProject().find(x => x.id == b.dataset.edit);
-      if (!s) return;
-      shotInput.value = s.shot;
-      typeInput.value = s.type;
-      actorsInput.value = s.actors;
-      locationInput.value = s.location;
-      notesInput.value = s.notes;
-      editingId = s.id;
-      addShotBtn.textContent = "Save Changes";
-    });
-
-    document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
-      data.projects[data.current] = ensureProject().filter(x => x.id != b.dataset.del);
+    };
+    d.querySelector("button").onclick=()=>{
+      qs("shot").value=s.shot;
+      qs("notes").value=s.notes;
+      editingId=s.id;
+      qs("addShot").textContent="Save Changes";
+    };
+    d.querySelectorAll("button")[1].onclick=()=>{
+      ensureProject().splice(i,1);
       save();
-    });
+    };
 
-    document.querySelectorAll("[data-dup]").forEach(b => b.onclick = () => {
-      const s = ensureProject().find(x => x.id == b.dataset.dup);
-      ensureProject().push({ ...s, id: Date.now() });
-      save();
-    });
+    shotsDiv.appendChild(d);
+  });
+}
 
-    document.querySelectorAll("[data-up]").forEach(b => b.onclick = () => {
-      const shots = ensureProject();
-      const i = Number(b.dataset.up);
-      if (i > 0) [shots[i - 1], shots[i]] = [shots[i], shots[i - 1]];
-      save();
-    });
-
-    document.querySelectorAll("[data-down]").forEach(b => b.onclick = () => {
-      const shots = ensureProject();
-      const i = Number(b.dataset.down);
-      if (i < shots.length - 1) [shots[i + 1], shots[i]] = [shots[i], shots[i + 1]];
-      save();
-    });
-
-    document.querySelectorAll(".status").forEach((el, idx) => el.onclick = () => {
-      const shots = ensureProject();
-      shots[idx].status = shots[idx].status === "Planned" ? "Shot" : "Planned";
-      save();
-    });
-  }
-
-  addProjectBtn.onclick = addProject;
-  addShotBtn.onclick = addShot;
-  projectSelect.onchange = () => { data.current = projectSelect.value; save(); };
-
-  render();
+projectSel.onchange=()=>{data.current=projectSel.value;save();};
+save();
 });
 </script>
 </body>
