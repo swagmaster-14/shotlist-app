@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CineSlate</title>
 
 <style>
 :root {
-  --bg: #0b0b0e;
-  --card: #17171c;
+  --bg: #0f1115;
+  --card: #1b1e25;
   --muted: #9ca3af;
-  --accent: #e5e7eb;
+  --accent: #ffffff;
 }
 
 body {
@@ -21,7 +21,7 @@ body {
 }
 
 .container {
-  max-width: 430px;
+  max-width: 420px;
   margin: auto;
   padding: 16px;
 }
@@ -34,26 +34,30 @@ h1 {
 label {
   font-size: 12px;
   color: var(--muted);
-  margin-top: 10px;
+  margin-top: 12px;
   display: block;
 }
 
 input, select, textarea {
   width: 100%;
+  margin-top: 6px;
   padding: 10px;
-  margin-top: 4px;
   border-radius: 10px;
   border: none;
   background: var(--card);
   color: white;
 }
 
-textarea { resize: vertical; }
+textarea {
+  resize: vertical;
+}
 
 button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
   border: none;
-  border-radius: 10px;
-  padding: 10px;
   background: var(--accent);
   color: black;
   font-weight: 600;
@@ -61,51 +65,53 @@ button {
 }
 
 button.secondary {
-  background: #27272a;
+  background: #2a2e39;
   color: white;
-  font-weight: 500;
 }
 
-.section {
-  margin-top: 18px;
+.divider {
+  height: 1px;
+  background: #2a2e39;
+  margin: 20px 0;
 }
 
+/* Shot cards */
 .shot {
   background: var(--card);
-  padding: 12px;
+  padding: 14px;
   border-radius: 14px;
   margin-top: 12px;
 }
 
-.shot-header {
+.shot-title {
   font-weight: 600;
 }
 
-.meta {
+.shot-meta {
   font-size: 13px;
   color: var(--muted);
   margin-top: 4px;
 }
 
-.actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
+.shot-notes {
+  font-size: 13px;
+  margin-top: 6px;
 }
 
-.actions button {
-  padding: 6px 8px;
-  font-size: 13px;
+.shot-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.shot-actions button {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .drag {
   cursor: grab;
-}
-
-.divider {
-  height: 1px;
-  background: #27272a;
-  margin: 16px 0;
 }
 </style>
 </head>
@@ -115,6 +121,7 @@ button.secondary {
 
 <h1>CineSlate</h1>
 
+<!-- Film -->
 <label>Film</label>
 <select id="filmSelect"></select>
 <input id="newFilm" placeholder="New film name">
@@ -123,21 +130,19 @@ button.secondary {
 
 <div class="divider"></div>
 
-<div class="section">
+<!-- Shot form -->
 <label>Shot Description</label>
-<input id="shotDesc" placeholder="INT. HALLWAY – TRACKING">
+<input id="desc" placeholder="INT. HALLWAY – TRACKING">
 
 <label>Shot Type</label>
 <select id="shotType"></select>
-<input id="newShotType" placeholder="Add shot type">
+<input id="newShotType" placeholder="Add shot type (e.g. CU, Wide)">
 
 <label>Actors</label>
-<select id="actors"></select>
-<input id="newActor" placeholder="Add actor">
+<input id="actors" placeholder="Actor names">
 
 <label>Crew</label>
-<select id="crew"></select>
-<input id="newCrew" placeholder="Add crew">
+<input id="crew" placeholder="DP / Operator / Sound">
 
 <label>Location</label>
 <select id="location"></select>
@@ -147,128 +152,132 @@ button.secondary {
 <textarea id="notes"></textarea>
 
 <button onclick="addShot()">Add Shot</button>
-</div>
 
 <div class="divider"></div>
 
+<!-- Shot list -->
 <div id="shotList"></div>
 
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("cineslate_clean")) || {
+/* ---------- STATE ---------- */
+let app = JSON.parse(localStorage.getItem("cineslate_v2")) || {
   films: {},
-  current: null,
-  shotTypes: [],
-  actors: [],
-  crew: [],
+  currentFilm: null,
+  shotTypes: ["Wide", "Medium", "CU"],
   locations: []
 };
 
+/* ---------- HELPERS ---------- */
+function $(id) { return document.getElementById(id); }
+
 function save() {
-  localStorage.setItem("cineslate_clean", JSON.stringify(state));
+  localStorage.setItem("cineslate_v2", JSON.stringify(app));
   render();
 }
 
-function $(id) { return document.getElementById(id); }
-
-function ensureFilm() {
-  if (!state.current) return [];
-  if (!state.films[state.current]) state.films[state.current] = [];
-  return state.films[state.current];
+function currentShots() {
+  if (!app.currentFilm) return [];
+  if (!app.films[app.currentFilm]) app.films[app.currentFilm] = [];
+  return app.films[app.currentFilm];
 }
 
-/* Film controls */
+/* ---------- FILMS ---------- */
 function addFilm() {
   const name = $("newFilm").value || $("filmSelect").value;
   if (!name) return;
-  if (!state.films[name]) state.films[name] = [];
-  state.current = name;
+  if (!app.films[name]) app.films[name] = [];
+  app.currentFilm = name;
   $("newFilm").value = "";
   save();
 }
 
 function deleteFilm() {
-  if (!state.current) return;
-  if (confirm("Delete this entire film?")) {
-    delete state.films[state.current];
-    state.current = null;
-    save();
-  }
+  if (!app.currentFilm) return;
+  if (!confirm("Delete this entire film?")) return;
+  delete app.films[app.currentFilm];
+  app.currentFilm = null;
+  save();
 }
 
-/* Dropdown helpers */
-function addUnique(list, value) {
-  if (value && !list.includes(value)) list.push(value);
-}
-
+/* ---------- SHOTS ---------- */
 function addShot() {
-  if (!$("shotDesc").value) return;
+  if (!$("desc").value || !app.currentFilm) return;
 
-  addUnique(state.shotTypes, $("newShotType").value);
-  addUnique(state.actors, $("newActor").value);
-  addUnique(state.crew, $("newCrew").value);
-  addUnique(state.locations, $("newLocation").value);
+  if ($("newShotType").value && !app.shotTypes.includes($("newShotType").value)) {
+    app.shotTypes.push($("newShotType").value);
+  }
 
-  ensureFilm().push({
+  if ($("newLocation").value && !app.locations.includes($("newLocation").value)) {
+    app.locations.push($("newLocation").value);
+  }
+
+  currentShots().push({
     id: Date.now(),
-    desc: $("shotDesc").value,
+    desc: $("desc").value,
     type: $("shotType").value,
-    actor: $("actors").value,
+    actors: $("actors").value,
     crew: $("crew").value,
     location: $("location").value,
     notes: $("notes").value
   });
 
-  ["shotDesc","notes","newShotType","newActor","newCrew","newLocation"].forEach(id => $(id).value = "");
+  ["desc","actors","crew","notes","newShotType","newLocation"].forEach(id => $(id).value = "");
   save();
 }
 
-/* Render */
+function deleteShot(index) {
+  currentShots().splice(index, 1);
+  save();
+}
+
+/* ---------- RENDER ---------- */
 function render() {
-  $("filmSelect").innerHTML = Object.keys(state.films)
-    .map(f => `<option ${f===state.current?"selected":""}>${f}</option>`)
+  // Films
+  $("filmSelect").innerHTML = Object.keys(app.films)
+    .map(f => `<option ${f === app.currentFilm ? "selected" : ""}>${f}</option>`)
     .join("");
 
-  ["shotType","actors","crew","location"].forEach((id, i) => {
-    const list = [state.shotTypes,state.actors,state.crew,state.locations][i];
-    $(id).innerHTML = list.map(v => `<option>${v}</option>`).join("");
-  });
+  // Dropdowns
+  $("shotType").innerHTML = app.shotTypes.map(t => `<option>${t}</option>`).join("");
+  $("location").innerHTML = app.locations.map(l => `<option>${l}</option>`).join("");
 
+  // Shots
   const list = $("shotList");
   list.innerHTML = "";
 
-  ensureFilm().forEach((s, i) => {
-    const d = document.createElement("div");
-    d.className = "shot drag";
-    d.draggable = true;
-    d.innerHTML = `
-      <div class="shot-header">${i+1}. ${s.desc}</div>
-      <div class="meta">${s.type} • ${s.actor} • ${s.crew} • ${s.location}</div>
-      <div class="meta">${s.notes || ""}</div>
-      <div class="actions">
-        <button onclick="removeShot(${i})">Delete</button>
+  currentShots().forEach((s, i) => {
+    const div = document.createElement("div");
+    div.className = "shot drag";
+    div.draggable = true;
+
+    div.innerHTML = `
+      <div class="shot-title">${i + 1}. ${s.desc}</div>
+      <div class="shot-meta">${s.type} • ${s.location}</div>
+      <div class="shot-meta">Actors: ${s.actors || "-"}</div>
+      <div class="shot-meta">Crew: ${s.crew || "-"}</div>
+      <div class="shot-notes">${s.notes || ""}</div>
+      <div class="shot-actions">
+        <button class="secondary" onclick="deleteShot(${i})">Delete</button>
       </div>
     `;
-    d.ondragstart = e => e.dataTransfer.setData("i", i);
-    d.ondragover = e => e.preventDefault();
-    d.ondrop = e => {
-      const from = e.dataTransfer.getData("i");
-      const shots = ensureFilm();
+
+    div.ondragstart = e => e.dataTransfer.setData("from", i);
+    div.ondragover = e => e.preventDefault();
+    div.ondrop = e => {
+      const from = e.dataTransfer.getData("from");
+      const shots = currentShots();
       shots.splice(i, 0, shots.splice(from, 1)[0]);
       save();
     };
-    list.appendChild(d);
+
+    list.appendChild(div);
   });
 }
 
-function removeShot(i) {
-  ensureFilm().splice(i, 1);
-  save();
-}
-
 $("filmSelect").onchange = () => {
-  state.current = $("filmSelect").value;
+  app.currentFilm = $("filmSelect").value;
   save();
 };
 
