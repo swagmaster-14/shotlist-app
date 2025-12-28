@@ -6,280 +6,273 @@
 <title>CineSlate</title>
 
 <style>
+:root {
+  --bg: #0b0b0e;
+  --card: #17171c;
+  --muted: #9ca3af;
+  --accent: #e5e7eb;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #09090b;
-  color: #fafafa;
+  background: var(--bg);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
+
 .container {
-  max-width: 420px;
+  max-width: 430px;
   margin: auto;
   padding: 16px;
 }
-h1 { font-size: 24px; }
-h2 { font-size: 16px; margin-top: 16px; }
 
-input, textarea, select {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  background: #27272a;
-  color: white;
-}
-button {
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
-  background: #3f3f46;
-  color: white;
-  cursor: pointer;
-}
-button.primary {
-  width: 100%;
-  background: white;
-  color: black;
-  font-weight: bold;
+h1 {
+  font-size: 22px;
   margin-bottom: 12px;
 }
-button.icon {
-  background: #27272a;
-  font-size: 16px;
-}
-.shot {
-  background: #18181b;
-  padding: 12px;
-  border-radius: 10px;
+
+label {
+  font-size: 12px;
+  color: var(--muted);
   margin-top: 10px;
+  display: block;
 }
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  border-radius: 10px;
+  border: none;
+  background: var(--card);
+  color: white;
+}
+
+textarea { resize: vertical; }
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--accent);
+  color: black;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #27272a;
+  color: white;
+  font-weight: 500;
+}
+
+.section {
+  margin-top: 18px;
+}
+
+.shot {
+  background: var(--card);
+  padding: 12px;
+  border-radius: 14px;
+  margin-top: 12px;
+}
+
+.shot-header {
+  font-weight: 600;
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 .actions {
   display: flex;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
-.status {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
-  margin-top: 6px;
-  cursor: pointer;
+
+.actions button {
+  padding: 6px 8px;
+  font-size: 13px;
 }
-.planned { background: #3f3f46; }
-.shotdone { background: #16a34a; }
-.draggable { cursor: grab; }
+
+.drag {
+  cursor: grab;
+}
+
 .divider {
-  border-top: 1px solid #27272a;
-  margin: 14px 0;
+  height: 1px;
+  background: #27272a;
+  margin: 16px 0;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
+
 <h1>CineSlate</h1>
 
-<select id="project"></select>
-<input id="newProject" placeholder="New Film Name">
-<button class="primary" id="addProject">Add / Switch Film</button>
-<button class="primary" id="deleteProject">Delete Current Film</button>
+<label>Film</label>
+<select id="filmSelect"></select>
+<input id="newFilm" placeholder="New film name">
+<button onclick="addFilm()">Add / Switch Film</button>
+<button class="secondary" onclick="deleteFilm()">Delete Film</button>
 
 <div class="divider"></div>
 
-<h2>Shot</h2>
-<input id="shot" placeholder="Scene / Shot description">
+<div class="section">
+<label>Shot Description</label>
+<input id="shotDesc" placeholder="INT. HALLWAY – TRACKING">
 
-<select id="type"></select>
-<input id="newType" placeholder="Add shot type">
-<button id="addType">Add Shot Type</button>
+<label>Shot Type</label>
+<select id="shotType"></select>
+<input id="newShotType" placeholder="Add shot type">
 
+<label>Actors</label>
 <select id="actors"></select>
 <input id="newActor" placeholder="Add actor">
-<button id="addActor">Add Actor</button>
 
+<label>Crew</label>
+<select id="crew"></select>
+<input id="newCrew" placeholder="Add crew">
+
+<label>Location</label>
 <select id="location"></select>
 <input id="newLocation" placeholder="Add location">
-<button id="addLocation">Add Location</button>
 
-<textarea id="notes" placeholder="Notes"></textarea>
-<button class="primary" id="addShot">Add Shot</button>
+<label>Notes</label>
+<textarea id="notes"></textarea>
 
-<div class="divider"></div>
-
-<h2>Crew</h2>
-<select id="crew"></select>
-<input id="newCrew" placeholder="Add crew member">
-<button id="addCrew">Add Crew Member</button>
+<button onclick="addShot()">Add Shot</button>
+</div>
 
 <div class="divider"></div>
 
-<button class="primary" id="exportProject">Export Project Key</button>
-<textarea id="importData" placeholder="Paste Project Key"></textarea>
-<button class="primary" id="importProject">Import Project Key</button>
+<div id="shotList"></div>
 
-<div id="shots"></div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
-let data = JSON.parse(localStorage.getItem("cineslate")) || {
-  projects:{}, current:null,
-  types:[], actors:[], locations:[], crew:[]
+let state = JSON.parse(localStorage.getItem("cineslate_clean")) || {
+  films: {},
+  current: null,
+  shotTypes: [],
+  actors: [],
+  crew: [],
+  locations: []
 };
 
-const qs = id => document.getElementById(id);
-const projectSel = qs("project");
-
-function save(){ localStorage.setItem("cineslate", JSON.stringify(data)); render(); }
-function ensureProject(){
-  if(!data.current) return [];
-  if(!data.projects[data.current]) data.projects[data.current]=[];
-  return data.projects[data.current];
+function save() {
+  localStorage.setItem("cineslate_clean", JSON.stringify(state));
+  render();
 }
 
-function refreshDropdown(id, arr){
-  const el = qs(id);
-  el.innerHTML = arr.map(v=>`<option>${v}</option>`).join("");
+function $(id) { return document.getElementById(id); }
+
+function ensureFilm() {
+  if (!state.current) return [];
+  if (!state.films[state.current]) state.films[state.current] = [];
+  return state.films[state.current];
 }
 
-qs("addProject").onclick = ()=>{
-  const name = qs("newProject").value || projectSel.value;
-  if(!name) return;
-  if(!data.projects[name]) data.projects[name]=[];
-  data.current=name;
-  qs("newProject").value="";
+/* Film controls */
+function addFilm() {
+  const name = $("newFilm").value || $("filmSelect").value;
+  if (!name) return;
+  if (!state.films[name]) state.films[name] = [];
+  state.current = name;
+  $("newFilm").value = "";
   save();
-};
+}
 
-qs("deleteProject").onclick = ()=>{
-  if(!data.current) return;
-  if(confirm("Delete this entire film?")){
-    delete data.projects[data.current];
-    data.current=null;
+function deleteFilm() {
+  if (!state.current) return;
+  if (confirm("Delete this entire film?")) {
+    delete state.films[state.current];
+    state.current = null;
     save();
   }
-};
+}
 
-["type","actor","location","crew"].forEach(key=>{
-  qs("add"+key.charAt(0).toUpperCase()+key.slice(1)).onclick = ()=>{
-    const val = qs("new"+key.charAt(0).toUpperCase()+key.slice(1)).value.trim();
-    if(val && !data[key+"s"]?.includes(val)){
-      data[key+"s"] ? data[key+"s"].push(val) : data[key].push(val);
-      qs("new"+key.charAt(0).toUpperCase()+key.slice(1)).value="";
-      save();
-    }
-  };
-});
+/* Dropdown helpers */
+function addUnique(list, value) {
+  if (value && !list.includes(value)) list.push(value);
+}
 
-let editingId=null;
+function addShot() {
+  if (!$("shotDesc").value) return;
 
-qs("addShot").onclick=()=>{
-  if(!qs("shot").value) return;
-  const shots = ensureProject();
+  addUnique(state.shotTypes, $("newShotType").value);
+  addUnique(state.actors, $("newActor").value);
+  addUnique(state.crew, $("newCrew").value);
+  addUnique(state.locations, $("newLocation").value);
 
-  if(editingId){
-    Object.assign(shots.find(s=>s.id===editingId),{
-      shot:qs("shot").value,
-      type:qs("type").value,
-      actors:qs("actors").value,
-      location:qs("location").value,
-      notes:qs("notes").value
-    });
-    editingId=null;
-    qs("addShot").textContent="Add Shot";
-  } else {
-    shots.push({
-      id:Date.now(),
-      shot:qs("shot").value,
-      type:qs("type").value,
-      actors:qs("actors").value,
-      location:qs("location").value,
-      notes:qs("notes").value,
-      status:"Planned"
-    });
-  }
+  ensureFilm().push({
+    id: Date.now(),
+    desc: $("shotDesc").value,
+    type: $("shotType").value,
+    actor: $("actors").value,
+    crew: $("crew").value,
+    location: $("location").value,
+    notes: $("notes").value
+  });
 
-  ["shot","notes"].forEach(i=>qs(i).value="");
+  ["shotDesc","notes","newShotType","newActor","newCrew","newLocation"].forEach(id => $(id).value = "");
   save();
-};
+}
 
-qs("exportProject").onclick=()=>{
-  navigator.clipboard.writeText(JSON.stringify({
-    name:data.current,
-    shots:ensureProject()
-  }));
-  alert("Copied project key");
-};
+/* Render */
+function render() {
+  $("filmSelect").innerHTML = Object.keys(state.films)
+    .map(f => `<option ${f===state.current?"selected":""}>${f}</option>`)
+    .join("");
 
-qs("importProject").onclick=()=>{
-  try{
-    const p=JSON.parse(qs("importData").value);
-    data.projects[p.name]=p.shots;
-    data.current=p.name;
-    qs("importData").value="";
-    save();
-  }catch{ alert("Invalid key"); }
-};
+  ["shotType","actors","crew","location"].forEach((id, i) => {
+    const list = [state.shotTypes,state.actors,state.crew,state.locations][i];
+    $(id).innerHTML = list.map(v => `<option>${v}</option>`).join("");
+  });
 
-function render(){
-  projectSel.innerHTML = Object.keys(data.projects).map(p=>`<option ${p===data.current?"selected":""}>${p}</option>`).join("");
-  refreshDropdown("type",data.types);
-  refreshDropdown("actors",data.actors);
-  refreshDropdown("location",data.locations);
-  refreshDropdown("crew",data.crew);
+  const list = $("shotList");
+  list.innerHTML = "";
 
-  const shotsDiv=qs("shots");
-  shotsDiv.innerHTML="";
-
-  ensureProject().forEach((s,i)=>{
-    const d=document.createElement("div");
-    d.className="shot draggable";
-    d.draggable=true;
-    d.innerHTML=`
-      <strong>${i+1}. ${s.shot}</strong><br>
-      ${s.type} | ${s.actors} | ${s.location}<br>
-      <small>${s.notes}</small><br>
-      <div class="status ${s.status==="Shot"?"shotdone":"planned"}">${s.status}</div>
+  ensureFilm().forEach((s, i) => {
+    const d = document.createElement("div");
+    d.className = "shot drag";
+    d.draggable = true;
+    d.innerHTML = `
+      <div class="shot-header">${i+1}. ${s.desc}</div>
+      <div class="meta">${s.type} • ${s.actor} • ${s.crew} • ${s.location}</div>
+      <div class="meta">${s.notes || ""}</div>
       <div class="actions">
-        <button class="icon">✏️</button>
-        <button class="icon">🗑</button>
+        <button onclick="removeShot(${i})">Delete</button>
       </div>
     `;
-
-    d.ondragstart=e=>e.dataTransfer.setData("i",i);
-    d.ondragover=e=>e.preventDefault();
-    d.ondrop=e=>{
-      const from=e.dataTransfer.getData("i");
-      const shots=ensureProject();
-      shots.splice(i,0,shots.splice(from,1)[0]);
+    d.ondragstart = e => e.dataTransfer.setData("i", i);
+    d.ondragover = e => e.preventDefault();
+    d.ondrop = e => {
+      const from = e.dataTransfer.getData("i");
+      const shots = ensureFilm();
+      shots.splice(i, 0, shots.splice(from, 1)[0]);
       save();
     };
-
-    d.querySelector(".status").onclick=()=>{
-      s.status=s.status==="Planned"?"Shot":"Planned";
-      save();
-    };
-    d.querySelector("button").onclick=()=>{
-      qs("shot").value=s.shot;
-      qs("notes").value=s.notes;
-      editingId=s.id;
-      qs("addShot").textContent="Save Changes";
-    };
-    d.querySelectorAll("button")[1].onclick=()=>{
-      ensureProject().splice(i,1);
-      save();
-    };
-
-    shotsDiv.appendChild(d);
+    list.appendChild(d);
   });
 }
 
-projectSel.onchange=()=>{data.current=projectSel.value;save();};
+function removeShot(i) {
+  ensureFilm().splice(i, 1);
+  save();
+}
+
+$("filmSelect").onchange = () => {
+  state.current = $("filmSelect").value;
+  save();
+};
+
 save();
-});
 </script>
 </body>
 </html>
