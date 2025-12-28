@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CineSlate</title>
 
-  <link rel="manifest" href="manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="theme-color" content="#09090b">
@@ -54,6 +53,7 @@
     button.icon {
       background: #27272a;
       font-size: 16px;
+      position: relative;
     }
     button.icon:hover::after {
       content: attr(data-label);
@@ -63,7 +63,10 @@
       padding: 4px 6px;
       border-radius: 4px;
       font-size: 11px;
-      margin-top: -28px;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
     }
     .shot {
       background: #18181b;
@@ -87,6 +90,10 @@
     }
     .planned { background: #3f3f46; }
     .shotdone { background: #16a34a; }
+    .divider {
+      margin: 14px 0;
+      border-top: 1px solid #27272a;
+    }
   </style>
 </head>
 <body>
@@ -97,6 +104,8 @@
   <input id="newProject" placeholder="Film Name">
   <button class="primary" id="addProject">Add / Switch Film</button>
 
+  <div class="divider"></div>
+
   <input id="shot" placeholder="Scene">
   <input id="type" placeholder="Shot Type(s)">
   <input id="actors" placeholder="Actors">
@@ -104,6 +113,12 @@
   <textarea id="notes" placeholder="Additional Notes"></textarea>
 
   <button class="primary" id="addShot">Add Shot</button>
+
+  <div class="divider"></div>
+
+  <button class="primary" id="exportProject">Export Project Key</button>
+  <textarea id="importData" placeholder="Paste Project Key here"></textarea>
+  <button class="primary" id="importProject">Import Project Key</button>
 
   <div id="shots"></div>
 </div>
@@ -124,6 +139,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const notesInput = document.getElementById("notes");
   const shotsDiv = document.getElementById("shots");
   const addShotBtn = document.getElementById("addShot");
+
+  const exportBtn = document.getElementById("exportProject");
+  const importBtn = document.getElementById("importProject");
+  const importData = document.getElementById("importData");
 
   let editingId = null;
 
@@ -178,6 +197,29 @@ document.addEventListener("DOMContentLoaded", () => {
     save();
   }
 
+  exportBtn.onclick = () => {
+    if (!data.current) return;
+    const payload = {
+      name: data.current,
+      shots: data.projects[data.current]
+    };
+    navigator.clipboard.writeText(JSON.stringify(payload));
+    alert("Project key copied to clipboard");
+  };
+
+  importBtn.onclick = () => {
+    try {
+      const payload = JSON.parse(importData.value);
+      if (!payload.name || !Array.isArray(payload.shots)) throw "Invalid";
+      data.projects[payload.name] = payload.shots;
+      data.current = payload.name;
+      importData.value = "";
+      save();
+    } catch {
+      alert("Invalid project key");
+    }
+  };
+
   function render() {
     projectSelect.innerHTML = Object.keys(data.projects)
       .map(p => `<option ${p === data.current ? "selected" : ""}>${p}</option>`)
@@ -224,7 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("[data-dup]").forEach(b => b.onclick = () => {
       const s = ensureProject().find(x => x.id == b.dataset.dup);
-      if (!s) return;
       ensureProject().push({ ...s, id: Date.now() });
       save();
     });
